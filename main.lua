@@ -1,4 +1,5 @@
 local theme = require("theme")
+local Track = require("track")
 
 function love.load()
     StartTime = love.timer.getTime()
@@ -10,21 +11,19 @@ function love.load()
     Hovered = nil
     Selected = nil
 
-    Resolution = 50
-    local n_points = 5
     Points = {}
-    for i = 1, n_points do
-        Points[i] = {x = 20 * i, y = 10, r = 10, hovered = false, mouse_distance = math.huge, best_hovered = false}
-    end
-    Intermediate = {}
-    Curve = {}
-    for i = 1, Resolution do
-        Curve[i] = { x = i, y = i }
-    end
+    T = Track:new()
+    RegisterPoints(T)
 
     WorldCanvas = null
     width, height = love.graphics.getDimensions()
     ResizeHelper(width, height)
+end
+
+function RegisterPoints(track)
+    for _, v in ipairs(track:getPoints()) do
+        table.insert(Points, v)
+    end
 end
 
 function UpdateMouse()
@@ -98,40 +97,7 @@ function love.update(dt)
         Selected.node.y = y
     end
 
-    for i = 1, (Resolution + 1) do
-        points = Points
-        local t = (i - 1) / Resolution
-        while #points > 1 do
-            reduced = {}
-            for j = 1, (#points - 1) do
-                local p1 = points[j]
-                local p2 = points[j + 1]
-                reduced[j] = plerp(p1, p2, t)
-            end
-            points = reduced
-        end
-        Curve[i] = points[1]
-    end
-end
-
-function DrawPoints(points)
-    for i, point in pairs(points) do
-        if point.best_hovered then
-            love.graphics.setColor(theme.highlight())
-        else
-            love.graphics.setColor(theme.spline())
-        end
-        love.graphics.circle("fill", point.x, point.y, point.r)
-
-        love.graphics.setColor(theme.outline())
-        love.graphics.circle("line", point.x, point.y, point.r)
-
-        local x = point.x - love.graphics.getFont():getWidth(tostring(i)) / 2
-        local y = point.y - love.graphics.getFont():getHeight() / 2
-        love.graphics.setColor(theme.outline())
-        love.graphics.print(tostring(i), x, y)
-    end
-    love.graphics.setColor(theme.white())
+    T:calc()
 end
 
 function love.draw()
@@ -139,29 +105,15 @@ function love.draw()
     -- love.graphics.setColor(theme.grass())
     love.graphics.clear(theme.grass())
 
-    DrawPoints(Points)
-    love.graphics.setColor(theme.highlight())
-    for i = 1, #Points do
-        p1 = Points[i]
-        if i < #Points then
-            p2 = Points[i + 1]
-            -- love.graphics.line(p1.x, p1.y, p2.x, p2.y)
-        end
-    end
-
-    love.graphics.setColor(theme.white())
-    for i = 1, #Curve do
-        p1 = Curve[i]
-        if i < #Curve then
-            p2 = Curve[i + 1]
-            love.graphics.line(p1.x, p1.y, p2.x, p2.y)
-        end
-    end
+    T:drawPoints()
+    -- T:drawLines()
+    T:drawCurve()
+    T:drawTies()
 
     love.graphics.setColor(theme.white())
     love.graphics.setCanvas()
     love.graphics.draw(WorldCanvas, 0, 0)
-    end
+end
 
 function love.resize(w, h)
     ResizeHelper(w, h)
