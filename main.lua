@@ -12,8 +12,12 @@ function love.load()
     Selected = nil
 
     Points = {}
-    T = Track:new()
-    RegisterPoints(T)
+    Tracks = {}
+    for i = 1, 1 do
+        local t = Track:new({ x = 10, y = 10 * i}, {x = 200, y = 10 * i})
+        RegisterPoints(t)
+        table.insert(Tracks, t)
+    end
 
     WorldCanvas = null
     width, height = love.graphics.getDimensions()
@@ -97,18 +101,23 @@ function love.update(dt)
         Selected.node.y = y
     end
 
-    T:calc()
+    for i, t in ipairs(Tracks) do
+        t:calc()
+    end
 end
 
 function love.draw()
     love.graphics.setCanvas(WorldCanvas)
-    -- love.graphics.setColor(theme.grass())
     love.graphics.clear(theme.grass())
 
-    T:drawPoints()
-    -- T:drawLines()
-    T:drawCurve()
-    T:drawTies()
+    for i, t in ipairs(Tracks) do
+        -- t:drawLines()
+        -- t:drawCurve()
+        t:drawTies()
+        t:drawTracks()
+        t:drawHandles()
+        t:drawPoints()
+    end
 
     love.graphics.setColor(theme.white())
     love.graphics.setCanvas()

@@ -27,6 +27,10 @@ function theme.outline()
     return Div(BLACK)
 end
 
+function theme.track()
+    return Div(BLACK)
+end
+
 function Select(colors, variation)
     local var = (variation - 1) % #colors + 1
     return Div(colors[var])
