@@ -8,7 +8,7 @@ function Track:new(p1, p2)
     for i = 1, obj.n_points do
         local t = (i - 1) / obj.n_points
         local p = plerp(p1, p2, t)
-        obj.points[i] = {x = p.x, y = p.y, r = 10, hovered = false, mouse_distance = math.huge, best_hovered = false}
+        obj.points[i] = {x = p.x, y = p.y, r = 20, hovered = false, mouse_distance = math.huge, best_hovered = false}
     end
     return obj
 end
@@ -18,8 +18,10 @@ function new_common()
     obj.n_points = 4
     obj.resolution = 50
     obj.points = {}
+    obj.proxyPoints = {}
     obj.called = false
     obj.tieLength = 10
+    obj.handleLength = 0.3
     obj.curve = {}
     for i = 1, obj.resolution do
         obj.curve[i] = { x = i, y = i}
@@ -27,14 +29,41 @@ function new_common()
     for i = 1, obj.n_points do
         obj.points[i] = {x = 0, y = 0, r = 10, hovered = false, mouse_distance = math.huge, best_hovered = false}
     end
+    for i = 1, obj.n_points do
+        if i == 1 or i == #obj.points then
+            obj.proxyPoints[i] = obj.points[i]
+        end
+        if i == 2 or i == #obj.points - 1 then
+            local proxyPoint = nil
+            if i == 2 then
+                proxyPoint = plerp(obj.points[1], obj.points[2], obj.handleLength)
+            end
+            if i == #obj.points - 1 then
+                proxyPoint = plerp(obj.points[#obj.points], obj.points[#obj.points - 1], obj.handleLength)
+            end
+            proxyPoint.r = 10
+            proxyPoint.hovered = false
+            proxyPoint.mouse_distance = math.huge
+            proxyPoint.best_hovered = false
+            obj.proxyPoints[i] = proxyPoint
+        end
+    end
     return obj
 end
 
 function Track:getPoints()
-    return self.points
+    return self.proxyPoints
 end
 
 function Track:calc()
+    self.points[1] = self.proxyPoints[1]
+    local temp = plerp(self.proxyPoints[1], self.proxyPoints[2], 1 / self.handleLength)
+    self.points[2].x = temp.x
+    self.points[2].y = temp.y
+    temp = plerp(self.proxyPoints[#self.proxyPoints], self.proxyPoints[#self.proxyPoints - 1], 1 / self.handleLength)
+    self.points[#self.proxyPoints - 1].x = temp.x
+    self.points[#self.proxyPoints - 1].y = temp.y
+    self.points[#self.proxyPoints] = self.proxyPoints[#self.proxyPoints]
     for i = 1, (self.resolution + 1) do
         local points = self.points
         local t = (i - 1) / self.resolution
@@ -72,7 +101,11 @@ function Track:drawPoints()
             --    love.graphics.polygon("fill", tri)
             --end
 
-            love.graphics.setColor(theme.spline())
+            if point.best_hovered then
+                love.graphics.setColor(theme.highlight())
+            else
+                love.graphics.setColor(theme.spline())
+            end
             love.graphics.setLineWidth(6)
             for _, shape in ipairs(verts) do
                 for j, v1 in ipairs(shape) do
@@ -115,22 +148,40 @@ end
 
 function Track:drawHandles()
     local ps = self.points
-    local handle_1 = plerp(ps[#ps], ps[#ps - 1], 0.3)
-    local handle_2 = plerp(ps[1], ps[2], 0.3)
-    local handles = { { handle_1, ps[#ps] }, { handle_2, ps[1] }}
+    local handle_1 = self.proxyPoints[2]
+    local handle_2 = self.proxyPoints[#self.proxyPoints - 1]
+    local handles = { { handle_1, ps[1] }, { handle_2, ps[#ps] }}
+
+    love.graphics.print('Point 2 ' .. self.points[1].x .. ' ' .. self.points[1].y, 20, 20)
+    love.graphics.print('pPoint 2 ' .. self.proxyPoints[1].x .. ' ' .. self.proxyPoints[1].y, 130, 20)
+
+    love.graphics.print('Point n ' .. self.points[#self.proxyPoints - 1].x .. ' ' .. self.points[#self.proxyPoints - 1].y, 20, 70)
+    love.graphics.print('pPoint n ' .. self.proxyPoints[#self.proxyPoints - 1].x .. ' ' .. self.proxyPoints[#self.proxyPoints - 1].y, 130, 70)
 
     for i, handle in ipairs(handles) do
+        local splineColor = theme.spline()
+        if handle.best_hovered then
+            splineColor = theme.highlight()
+        end
+
         local src = handle[2]
         local sink = handle[1]
+        love.graphics.setLineWidth(5)
         love.graphics.setColor(theme.outline())
         love.graphics.line(src.x, src.y, sink.x, sink.y)
 
-        love.graphics.setColor(theme.spline())
-        love.graphics.circle("fill", sink.x, sink.y, 5)
+        love.graphics.setLineWidth(2)
+        love.graphics.setColor(splineColor)
+        love.graphics.line(src.x, src.y, sink.x, sink.y)
 
+        love.graphics.setColor(splineColor)
+        love.graphics.circle("fill", sink.x, sink.y, 7)
+
+        love.graphics.setLineWidth(2)
         love.graphics.setColor(theme.outline())
-        love.graphics.circle("line", sink.x, sink.y, 5)
+        love.graphics.circle("line", sink.x, sink.y, 7)
     end
+    love.graphics.setLineWidth(1)
 end
 
 function Track:drawLines()
