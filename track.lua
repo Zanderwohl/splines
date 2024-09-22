@@ -96,11 +96,6 @@ function Track:drawPoints()
                     vert.y = vert.y + point.y
                 end
             end
-            --local triangles = love.math.triangulate(flatten(verts))
-            --for _, tri in ipairs(triangles) do
-            --    love.graphics.polygon("fill", tri)
-            --end
-
             if point.best_hovered then
                 love.graphics.setColor(theme.highlight())
             else
@@ -131,19 +126,23 @@ function Track:drawPoints()
                 end
             end
             love.graphics.setLineWidth(1)
-        else
-            love.graphics.circle("fill", point.x, point.y, point.r)
-
-            love.graphics.setColor(theme.outline())
-            love.graphics.circle("line", point.x, point.y, point.r)
-
-            local x = point.x - love.graphics.getFont():getWidth(tostring(i)) / 2
-            local y = point.y - love.graphics.getFont():getHeight() / 2
-            love.graphics.setColor(theme.outline())
-            love.graphics.print(tostring(i), x, y)
         end
     end
     love.graphics.setColor(theme.white())
+end
+
+function Track:drawDebugAnchors()
+    for i, point in pairs(self.points) do
+    love.graphics.setColor(theme.spline())
+        love.graphics.circle("fill", point.x, point.y, point.r)
+
+        love.graphics.setColor(theme.outline())
+        love.graphics.circle("line", point.x, point.y, point.r)
+
+        local x = point.x - love.graphics.getFont():getWidth(tostring(i)) / 2
+        local y = point.y - love.graphics.getFont():getHeight() / 2
+        love.graphics.setColor(theme.outline())
+    end
 end
 
 function Track:drawHandles()
@@ -151,12 +150,6 @@ function Track:drawHandles()
     local handle_1 = self.proxyPoints[2]
     local handle_2 = self.proxyPoints[#self.proxyPoints - 1]
     local handles = { { handle_1, ps[1] }, { handle_2, ps[#ps] }}
-
-    love.graphics.print('Point 2 ' .. self.points[1].x .. ' ' .. self.points[1].y, 20, 20)
-    love.graphics.print('pPoint 2 ' .. self.proxyPoints[1].x .. ' ' .. self.proxyPoints[1].y, 130, 20)
-
-    love.graphics.print('Point n ' .. self.points[#self.proxyPoints - 1].x .. ' ' .. self.points[#self.proxyPoints - 1].y, 20, 70)
-    love.graphics.print('pPoint n ' .. self.proxyPoints[#self.proxyPoints - 1].x .. ' ' .. self.proxyPoints[#self.proxyPoints - 1].y, 130, 70)
 
     for i, handle in ipairs(handles) do
         local splineColor = theme.spline()

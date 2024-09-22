@@ -117,6 +117,7 @@ function love.draw()
         t:drawTracks()
         t:drawHandles()
         t:drawPoints()
+        -- t:drawDebugAnchors()
     end
 
     love.graphics.setColor(theme.white())
