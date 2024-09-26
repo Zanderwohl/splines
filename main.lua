@@ -111,12 +111,12 @@ function love.draw()
     love.graphics.clear(theme.grass())
 
     for i, t in ipairs(Tracks) do
-        -- t:drawLines()
+        --t:drawLines()
         -- t:drawCurve()
         t:drawTies()
         t:drawTracks()
         t:drawHandles()
-        t:drawPoints()
+        t:drawConnectors()
     end
 
     love.graphics.setColor(theme.white())

@@ -60,9 +60,11 @@ function Track:calc()
     local temp = plerp(self.proxyPoints[1], self.proxyPoints[2], 1 / self.handleLength)
     self.points[2].x = temp.x
     self.points[2].y = temp.y
+    self.points[2].best_hovered = self.proxyPoints[2].best_hovered
     temp = plerp(self.proxyPoints[#self.proxyPoints], self.proxyPoints[#self.proxyPoints - 1], 1 / self.handleLength)
     self.points[#self.proxyPoints - 1].x = temp.x
     self.points[#self.proxyPoints - 1].y = temp.y
+    self.points[#self.proxyPoints - 1].best_hovered = self.proxyPoints[#self.proxyPoints - 1].best_hovered
     self.points[#self.proxyPoints] = self.proxyPoints[#self.proxyPoints]
     for i = 1, (self.resolution + 1) do
         local points = self.points
@@ -88,6 +90,26 @@ function Track:drawPoints()
         else
             love.graphics.setColor(theme.spline())
         end
+        love.graphics.circle("fill", point.x, point.y, point.r)
+
+        love.graphics.setColor(theme.outline())
+        love.graphics.circle("line", point.x, point.y, point.r)
+
+        local x = point.x - love.graphics.getFont():getWidth(tostring(i)) / 2
+        local y = point.y - love.graphics.getFont():getHeight() / 2
+        love.graphics.setColor(theme.outline())
+        -- love.graphics.print(tostring(i), x, y)
+    end
+    love.graphics.setColor(theme.white())
+end
+
+function Track:drawConnectors()
+    for i, point in pairs(self.points) do
+        if point.best_hovered then
+            love.graphics.setColor(theme.highlight())
+        else
+            love.graphics.setColor(theme.spline())
+        end
         if i == 1 or i == #self.points then
             local verts = link_verts()
             for _, shape in ipairs(verts) do
@@ -96,10 +118,6 @@ function Track:drawPoints()
                     vert.y = vert.y + point.y
                 end
             end
-            --local triangles = love.math.triangulate(flatten(verts))
-            --for _, tri in ipairs(triangles) do
-            --    love.graphics.polygon("fill", tri)
-            --end
 
             if point.best_hovered then
                 love.graphics.setColor(theme.highlight())
@@ -131,16 +149,6 @@ function Track:drawPoints()
                 end
             end
             love.graphics.setLineWidth(1)
-        else
-            love.graphics.circle("fill", point.x, point.y, point.r)
-
-            love.graphics.setColor(theme.outline())
-            love.graphics.circle("line", point.x, point.y, point.r)
-
-            local x = point.x - love.graphics.getFont():getWidth(tostring(i)) / 2
-            local y = point.y - love.graphics.getFont():getHeight() / 2
-            love.graphics.setColor(theme.outline())
-            love.graphics.print(tostring(i), x, y)
         end
     end
     love.graphics.setColor(theme.white())
@@ -152,20 +160,21 @@ function Track:drawHandles()
     local handle_2 = self.proxyPoints[#self.proxyPoints - 1]
     local handles = { { handle_1, ps[1] }, { handle_2, ps[#ps] }}
 
-    love.graphics.print('Point 2 ' .. self.points[1].x .. ' ' .. self.points[1].y, 20, 20)
-    love.graphics.print('pPoint 2 ' .. self.proxyPoints[1].x .. ' ' .. self.proxyPoints[1].y, 130, 20)
+    -- love.graphics.print('Point 2 ' .. self.points[1].x .. ' ' .. self.points[1].y, 20, 20)
+    -- love.graphics.print('pPoint 2 ' .. self.proxyPoints[1].x .. ' ' .. self.proxyPoints[1].y, 130, 20)
 
-    love.graphics.print('Point n ' .. self.points[#self.proxyPoints - 1].x .. ' ' .. self.points[#self.proxyPoints - 1].y, 20, 70)
-    love.graphics.print('pPoint n ' .. self.proxyPoints[#self.proxyPoints - 1].x .. ' ' .. self.proxyPoints[#self.proxyPoints - 1].y, 130, 70)
+    -- love.graphics.print('Point n ' .. self.points[#self.proxyPoints - 1].x .. ' ' .. self.points[#self.proxyPoints - 1].y, 20, 70)
+    -- love.graphics.print('pPoint n ' .. self.proxyPoints[#self.proxyPoints - 1].x .. ' ' .. self.proxyPoints[#self.proxyPoints - 1].y, 130, 70)
 
     for i, handle in ipairs(handles) do
         local splineColor = theme.spline()
-        if handle.best_hovered then
-            splineColor = theme.highlight()
-        end
+
 
         local src = handle[2]
         local sink = handle[1]
+        if sink.best_hovered then
+            splineColor = theme.highlight()
+        end
         love.graphics.setLineWidth(5)
         love.graphics.setColor(theme.outline())
         love.graphics.line(src.x, src.y, sink.x, sink.y)
