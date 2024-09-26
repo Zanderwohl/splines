@@ -83,7 +83,7 @@ function Track:calc()
     self.called = true
 end
 
-function Track:drawPoints()
+function Track:drawConnectors()
     for i, point in pairs(self.points) do
         if point.best_hovered then
             love.graphics.setColor(theme.highlight())
