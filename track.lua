@@ -90,26 +90,6 @@ function Track:drawPoints()
         else
             love.graphics.setColor(theme.spline())
         end
-        love.graphics.circle("fill", point.x, point.y, point.r)
-
-        love.graphics.setColor(theme.outline())
-        love.graphics.circle("line", point.x, point.y, point.r)
-
-        local x = point.x - love.graphics.getFont():getWidth(tostring(i)) / 2
-        local y = point.y - love.graphics.getFont():getHeight() / 2
-        love.graphics.setColor(theme.outline())
-        -- love.graphics.print(tostring(i), x, y)
-    end
-    love.graphics.setColor(theme.white())
-end
-
-function Track:drawConnectors()
-    for i, point in pairs(self.points) do
-        if point.best_hovered then
-            love.graphics.setColor(theme.highlight())
-        else
-            love.graphics.setColor(theme.spline())
-        end
         if i == 1 or i == #self.points then
             local verts = link_verts()
             for _, shape in ipairs(verts) do
